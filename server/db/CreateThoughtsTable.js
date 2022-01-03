@@ -1,6 +1,8 @@
 const AWS = require("aws-sdk");
 
-AWS.config.update({ region: "us-east-2", endpoint: "http://localhost:8000" });
+// using the below line of code allows to use a local DynamoDB instance
+// AWS.config.update({ region: "us-east-2", endpoint: "http://localhost:8000" });
+AWS.config.update({ region: "us-east-2" });
 
 const dynamodb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
 
@@ -24,7 +26,7 @@ dynamodb.createTable(params, (err, data) => {
   if (err) {
     console.error(
       "Unable to create table. Error JSON:",
-      JSON.stringify(error, null, 2)
+      JSON.stringify(err, null, 2)
     );
   } else {
     console.log(
