@@ -1,44 +1,46 @@
-import React from "react";
-import { useQuery } from "@apollo/client";
-import { QUERY_THOUGHTS, QUERY_ME_BASIC } from "../utils/queries";
+import React, { useState, useEffect } from "react";
 import ThoughtList from "../components/ThoughtList";
-import Auth from "../utils/auth";
-import FriendList from "../components/FriendList";
 import ThoughtForm from "../components/ThoughtForm";
 
 const Home = () => {
-  const { loading, data } = useQuery(QUERY_THOUGHTS);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [thoughts, setThoughts] = useState([]);
 
-  // use object destructuring to extract `data` from the `useQuery` Hook's response and rename it `userData` to be more descriptive
-  const { data: userData } = useQuery(QUERY_ME_BASIC);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("/api/users");
+        const jsonData = await res.json();
+        // sort the array by createdAt property ordered by descending values
+        const data = jsonData.sort((a, b) =>
+          a.createdAt < b.createdAt ? 1 : -1
+        );
+        setThoughts([...data]);
+        setIsLoaded(true);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchData();
+  }, []);
 
-  const thoughts = data?.thoughts || [];
-
-  const loggedIn = Auth.loggedIn();
   return (
     <main>
       <div className="flex-row justify-space-between">
-        {loggedIn && (
-          <div className="col-12 mb-3">
-            <ThoughtForm />
-          </div>
-        )}
-        <div className={`col-12 mb-3 ${loggedIn && `col-lg-8`}`}>
-          {loading ? (
-            <div> Loading...</div>
+        <div className="col-12 mb-3">
+          <ThoughtForm />
+        </div>
+        <div className={`col-12 mb-3 `}>
+          {!isLoaded ? (
+            <div>Loading...</div>
           ) : (
-            <ThoughtList thoughts={thoughts} title="Some Feed for Thought(s)" />
+            <ThoughtList
+              thoughts={thoughts}
+              setThoughts={setThoughts}
+              title="Some Feed for Thought(s)..."
+            />
           )}
         </div>
-        {loggedIn && userData ? (
-          <div className="col-12 col-lg-3 mb-3">
-            <FriendList
-              username={userData.me.username}
-              friendCount={userData.me.friendCount}
-              friends={userData.me.friends}
-            />
-          </div>
-        ) : null}
       </div>
     </main>
   );
